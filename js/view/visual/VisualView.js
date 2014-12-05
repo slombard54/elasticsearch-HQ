@@ -73,28 +73,64 @@ var VisualView = Backbone.View.extend(
                 }
             }
 
-            // shards
-            var routing_nodes = _this.model.get('routing_nodes').nodes;
+            // shards	
+			
+			var routing_nodes = _this.model.get('routing_nodes').nodes;
             for (var j = 0; j < nodes.length; j++) {
                 var items = routing_nodes[nodes[j].id];
-                var shards = [];
-                _.each(items, function (item) {
-                    var shardName = item.shard;
+				var index = [];
+				var gindex = [];
+				
+				
+				_.map(items, function(item) {
+					var shardName = item.shard;
                     if (item.primary) {
                         shardName = '*' + shardName;
                     }
 
+				index.push({name:item.index, shard: shardName});
+					});
+
+				gindex = _.groupBy(index, function(item){return item.name;});
+                var shards = [];
+				
+				
+                _.each(gindex, function (item) {
                     var shardChildren = [];
-                    if (item.index) {
-                        if (_.contains(_this.indicesArray, item.index)) {
-                            shardChildren.push({name:item.index, type:'index'});
-                            var shard = {name:shardName, type:'shard', children:shardChildren};
-                            shards.push(shard);
-                        }
-                    }
+                    var nameindex;
+					_.each(item, function(shard) {
+                            shardChildren.push({name:shard.shard, type:'shard'});
+                            nameindex = shard.name;
+
+                        });
+ 					var shard = {name:nameindex, type:'index', children:shardChildren};
+					shards.push(shard);
                 });
-                nodes[j].children = shards;
+                
+				nodes[j].children = shards;
             }
+			
+            // var routing_nodes = _this.model.get('routing_nodes').nodes;
+            // for (var j = 0; j < nodes.length; j++) {
+                // var items = routing_nodes[nodes[j].id];
+                // var shards = [];
+                // _.each(items, function (item) {
+                    // var shardName = item.shard;
+                    // if (item.primary) {
+                        // shardName = '*' + shardName;
+                    // }
+
+                    // var shardChildren = [];
+                    // if (item.index) {
+                        // if (_.contains(_this.indicesArray, item.index)) {
+                            // shardChildren.push({name:item.index, type:'index'});
+                            // var shard = {name:shardName, type:'shard', children:shardChildren};
+                            // shards.push(shard);
+                        // }
+                    // }
+                // });
+                // nodes[j].children = shards;
+            // }
 
             jsonObj.children = nodes;
 
@@ -134,7 +170,7 @@ var VisualView = Backbone.View.extend(
                     d.y = d.depth * 180;
                 });
 
-                // Update the nodes…
+                // Update the nodesâ€¦
                 var node = vis.selectAll("g.node")
                     .data(nodes, function (d) {
                         return d.id || (d.id = ++i);
@@ -245,7 +281,7 @@ var VisualView = Backbone.View.extend(
                 nodeExit.select("text")
                     .style("fill-opacity", 1e-6);
 
-                // Update the links…
+                // Update the linksâ€¦
                 var link = vis.selectAll("path.link")
                     .data(tree.links(nodes), function (d) {
                         return d.target.id;
